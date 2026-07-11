@@ -185,6 +185,7 @@ class _State extends State<AdminUserTrainingPlanDetailScreen> {
                     final d = await showAppDatePicker(context: context,
                         initialDate: DateTime.tryParse(_plan!['expiration_date']?.toString() ?? '') ?? DateTime.now());
                     if (d == null) return;
+                    if (!mounted) return;
                     final ok = await showConfirmDialog(context, '¿Estás seguro de actualizar el vencimiento del plan?');
                     if (ok) await _updateField('expiration_date', d.toIso8601String());
                   },
@@ -270,9 +271,8 @@ class _State extends State<AdminUserTrainingPlanDetailScreen> {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             buildDefaultDragHandles: false,
-            onReorder: (oldIdx, newIdx) {
+            onReorderItem: (oldIdx, newIdx) {
               setState(() {
-                if (newIdx > oldIdx) newIdx--;
                 final item = currentExercises.removeAt(oldIdx);
                 currentExercises.insert(newIdx, item);
                 // Update plan exercises order
@@ -286,29 +286,34 @@ class _State extends State<AdminUserTrainingPlanDetailScreen> {
             },
             children: currentExercises.asMap().entries.map((entry) {
               final idx = entry.key; final ex = entry.value as Map<String, dynamic>;
-              return Card(
+              return Padding(
                 key: ValueKey(ex['id']),
-                color: t.secondBackground,
-                margin: const EdgeInsets.only(bottom: 8),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Row(children: [
-                    ReorderableDragStartListener(index: idx,
-                        child: Icon(Icons.drag_indicator, color: t.secondText)),
-                    const SizedBox(width: 8),
-                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(ex['exercise']?['name']?.toString() ?? '', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: t.text)),
-                      Text('Series: ${ex['sets'] ?? 'N/A'}  Reps: ${ex['reps'] ?? 'N/A'}  Descanso: ${ex['rest'] ?? 'N/A'}',
-                          style: TextStyle(fontSize: 13, color: t.secondText)),
-                      if (ex['description'] != null)
-                        Text('Nota: ${ex['description']}', style: TextStyle(fontSize: 13, color: t.secondText, fontStyle: FontStyle.italic)),
-                    ])),
-                    GestureDetector(onTap: () => _showEditExerciseDialog(ex),
-                        child: Padding(padding: const EdgeInsets.all(6), child: Icon(Icons.edit, size: 22, color: t.icon))),
-                    GestureDetector(onTap: () => _handleDeleteExercise(ex['id']),
-                        child: Padding(padding: const EdgeInsets.all(6), child: Icon(Icons.delete, size: 22, color: t.icon))),
-                  ]),
+                padding: const EdgeInsets.only(bottom: 8),
+                child: FractionallySizedBox(
+                  widthFactor: 0.8,
+                  alignment: Alignment.centerLeft,
+                  child: Card(
+                    color: t.secondBackground,
+                    margin: EdgeInsets.zero,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Row(children: [
+                        ReorderableDragStartListener(index: idx,
+                            child: Icon(Icons.drag_indicator, color: t.secondText)),
+                        const SizedBox(width: 8),
+                        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          Text(ex['exercise']?['name']?.toString() ?? '', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: t.text)),
+                          Text('Series: ${ex['sets'] ?? 'N/A'}  Reps: ${ex['reps'] ?? 'N/A'}  Descanso: ${ex['rest'] ?? 'N/A'}',
+                              style: TextStyle(fontSize: 13, color: t.secondText)),
+                        ])),
+                        GestureDetector(onTap: () => _showEditExerciseDialog(ex),
+                            child: Padding(padding: const EdgeInsets.all(6), child: Icon(Icons.edit, size: 22, color: t.icon))),
+                        GestureDetector(onTap: () => _handleDeleteExercise(ex['id']),
+                            child: Padding(padding: const EdgeInsets.all(6), child: Icon(Icons.delete, size: 22, color: t.icon))),
+                      ]),
+                    ),
+                  ),
                 ),
               );
             }).toList(),
@@ -328,7 +333,7 @@ class ExerciseSearchDialog extends StatefulWidget {
   final VoidCallback onAdded;
   final String addUrl;
 
-  const ExerciseSearchDialog({required this.isDarkMode, required this.planId,
+  const ExerciseSearchDialog({super.key, required this.isDarkMode, required this.planId,
       required this.selectedDay, required this.onAdded, required this.addUrl});
 
   static void show({required BuildContext context, required bool isDarkMode,
