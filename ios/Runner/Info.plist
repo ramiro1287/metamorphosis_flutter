@@ -30,8 +30,6 @@
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
 	<string>$(FLUTTER_BUILD_NAME)</string>
-	<key>CFBundleSignature</key>
-	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
@@ -49,6 +47,11 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<!-- Permisos para abrir apps externas (MercadoPago) -->
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>mercadopago</string>
+	</array>
 	<!-- Permite que Flutter controle el estilo de la status bar -->
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>

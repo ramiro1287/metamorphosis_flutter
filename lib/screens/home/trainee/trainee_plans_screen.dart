@@ -37,9 +37,26 @@ class _TraineePlansScreenState extends State<TraineePlansScreen> {
       final results =
           response.data['data']['results'] as List<dynamic>? ?? [];
       if (results.isNotEmpty && mounted) {
+        final isInitialLoad = _trainingPlan == null;
+        final newPlan = results[0] as Map<String, dynamic>;
+
         setState(() {
-          _trainingPlan = results[0] as Map<String, dynamic>;
-          _selectedDay = 1;
+          _trainingPlan = newPlan;
+          if (isInitialLoad) {
+            final exercises = newPlan['exercises'] as List<dynamic>? ?? [];
+            final exercisesByDay = <int, List<dynamic>>{};
+            for (final ex in exercises) {
+              final day = (ex['week_day'] as num).toInt();
+              exercisesByDay.putIfAbsent(day, () => []).add(ex);
+            }
+
+            if (exercisesByDay.keys.isNotEmpty) {
+              final sortedDays = exercisesByDay.keys.toList()..sort();
+              _selectedDay = sortedDays.first;
+            } else {
+              _selectedDay = 1; // Fallback to 1 if no exercises
+            }
+          }
         });
       }
     } on DioException catch (e) {
