@@ -34,26 +34,29 @@ class _AdminUserPlansScreenState extends State<AdminUserPlansScreen> {
       return;
     }
 
-    setState(() => _editingPlan = null);
-
     final ok = await showConfirmDialog(
         context, '¿Estás seguro de actualizar el precio del plan?');
     if (!ok) {
-      setState(() => _priceError = '');
       return;
     }
 
     try {
       await AuthService.put(
-          '/admin/users/update-plan/${_editingPlan == null ? "" : _editingPlan!["id"]}/',
+          '/admin/users/update-plan/${_editingPlan!["id"]}/',
           data: {'price': double.parse(parsed.toStringAsFixed(2))});
+
+      // Oculta el formulario de edición en caso de éxito
+      setState(() {
+        _editingPlan = null;
+        _priceError = '';
+      });
 
       // Recarga gymInfo para que los planes muestren el precio actualizado
       if (mounted) {
         await context.read<GymProvider>().getGymInfo();
         AppToast.success('Precio actualizado correctamente', '');
       }
-    } on DioException catch (_) {
+    } on DioException {
       AppToast.error('Error', 'No se pudo actualizar el precio');
     }
   }
